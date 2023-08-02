@@ -44,19 +44,19 @@ In cloud computing environments, such dynamic scaling and resource partitioning 
 
 Another challenge is the networking technology itself. Many network adapters support zero-copy of application memory from one system to another through **remote direct memory access (RDMA)** [[32](#Bib0032)]. RDMA is not only used in many distributed shared-memory cluster applications, but is also frequently used for implementing resource disaggregation. Low-latency storage devices, such as **non-volatile memory express devices (NVMes)**, can be shared at the block-level in the cluster. This is the case for **NVMe over Fabrics (NVMe-oF)** [[29](#Bib0029)], where RDMA is used to provide direct access and avoid going through the block-layer on the **operating system (OS)** on the server. Similarly, the result of a GPU computation may be copied out of GPU memory and onto the network directly using RDMA, without being copied to system memory first and going through the network stack [[91](#Bib0091)]. RDMA disaggregation is usually implemented as application-specific middleware. Although this often requires application software to use specific programming models and semantics, such as message-passing, the benefit is that resources may be shared by several hosts in the network. However, while RDMA allows data to be transferred efficiently over the network, translation between the network protocol and the local I/O bus is unavoidable. Compared to accessing a local device, this protocol translation incurs latency overheads that are not insignificant.
 
-> 另一个挑战是网络技术本身。许多网络适配器支持从一个系统到另一个系统的应用程序内存的零复制，通过远程直接内存访问(RDMA)[[32](#Bib0032)]。 RDMA 不仅用于许多分布式共享内存集群应用程序，而且经常用于实现资源分散。低延迟存储设备，如非易失性存储器 Express 设备(NVMes)，可以在集群中以块级分享。这就是 NVMe over Fabrics(NVMe-oF)[[29](#Bib0029)]的情况，其中 RDMA 用于提供直接访问，并避免通过服务器上操作系统(OS)的块层。类似地，GPU 计算的结果可以直接从 GPU 内存复制到网络中，而无需首先复制到系统内存并经过网络堆栈[[91](#Bib0091)]。 RDMA 分散通常实现为特定于应用程序的中间件。尽管这通常需要应用程序软件使用特定的编程模型和语义，例如消息传递，但其好处是可以在网络中的多个主机之间共享资源。但是，尽管 RDMA 允许数据在网络上有效地传输，但网络协议和本地 I / O 总线之间的转换是不可避免的。与访问本地设备相比，此协议转换会带来不可忽略的延迟开销。
+> 另一个挑战是**网络技术本身**。许多网络适配器支持从一个系统到另一个系统的应用程序内存的零复制，通过远程直接内存访问(RDMA)[[32](#Bib0032)]。 **RDMA 不仅用于许多分布式共享内存集群应用程序，而且经常用于实现资源分散**。低延迟存储设备，如非易失性存储器 Express 设备(NVMes)，可以在集群中以块级分享。这就是 NVMe over Fabrics(NVMe-oF)[[29](#Bib0029)]的情况，其中 RDMA 用于提供直接访问，并避免通过服务器上操作系统(OS)的块层。类似地，**GPU 计算的结果可以直接从 GPU 内存复制到网络中，而无需首先复制到系统内存并经过网络堆栈**[[91](#Bib0091)]。 RDMA 分散通常实现为特定于应用程序的中间件。尽管这通常需要应用程序软件使用特定的编程模型和语义，例如消息传递，但其好处是可以在网络中的多个主机之间共享资源。但是，**尽管 RDMA 允许数据在网络上有效地传输，但网络协议和本地 I / O 总线之间的转换是不可避免的**。与访问本地设备相比，此**协议转换会带来不可忽略的延迟开销**。
 
 **Peripheral Component Interconnect Express (PCIe)** is the most widely used standard for connecting devices to a computer system. Although it was originally designed as a local I/O bus connecting devices to the **central processing unit (CPU)** on a motherboard, extending the PCIe bus out of a single computer and connecting several systems is made possible by using a special type of device called **non-transparent bridge (NTB)**. NTBs can be embedded as a CPU feature [[77](#Bib0077), [95](#Bib0095)], but are more commonly implemented in PCIe switch chips [[13](#Bib0013), [82](#Bib0082)], allowing independent computer systems to interconnect with plug-in host adapter cards and external cables [[44](#Bib0044), [50](#Bib0050), [67](#Bib0067), [69](#Bib0069)]. Unlike other interconnection technologies, solutions built with PCIe networking allow resources to be accessed with very little performance overhead as no protocol translation is required. However, while some disaggregation approaches using NTBs have been proposed in the past [[31](#Bib0031), [89](#Bib0089)], these implementations present solutions where devices are owned by a dedicated server. As distributing resources is generally only possible to hosts that are directly connected to the same switch as this server, these approaches forgo the flexibility of fully distributed cluster computing systems. Alternative PCIe-based solutions rely on additional virtualization functionality in the PCIe switch chip hardware to partition the PCIe fabric and create virtual device trees for each individual host [[15](#Bib0015), [51](#Bib0051)]. These solutions allow devices to be directly attached a switch rather than a server. However, these solutions are only able to disaggregate resources at the device level. Sharing the same device with multiple hosts either requires virtualization support in the device itself, i.e., **Single-Root I/O Virtualization (SR-IOV)**, or additional distribution methods, such as RDMA.
 
-> PCIe(外围设备互连总线)是最常用的连接设备到计算机系统的标准。虽然它最初是设计用来将设备连接到主板上的中央处理器(CPU)的本地 I/O 总线，但通过使用一种称为非透明桥(NTB)的特殊类型的设备，可以将 PCIe 总线从单个计算机延伸出来并连接多个系统。 NTB 可以嵌入到 CPU 功能中[[77]，[95]]，但更常用的是在 PCIe 交换芯片[[13]，[82]]中实现，允许独立的计算机系统通过插入式主机适配器卡和外部电缆[[44]，[50]，[67]，[69]]进行互连。与其他互联技术不同，使用 PCIe 网络构建的解决方案可以访问资源，而不需要任何性能开销，因为不需要协议转换。但是，尽管过去提出了一些使用 NTB 的解耦方法[[31]，[89]]，但这些实现提供的解决方案中的设备都由专用服务器拥有。由于资源的分发通常只能针对直接连接到与此服务器相同的交换机的主机，因此这些方法会放弃完全分布式集群计算系统的灵活性。另一种基于 PCIe 的解决方案依赖于 PCIe 交换芯片硬件中的附加虚拟化功能来划分 PCIe 结构，并为每个单独的主机创建虚拟设备树[[15]，[51]]。这些解决方案允许设备直接连接到交换机，而不是服务器。但是，这些解决方案只能在设备级别解耦资源。要想在多个主机上共享相同的设备，要么需要设备本身提供虚拟化支持，即单根 I / O 虚拟化(SR-IOV)，要么需要额外的分发方法，如 RDMA。
+> PCIe(外围设备互连总线)是最常用的连接设备到计算机系统的标准。虽然它**最初是设计用来将设备连接到主板上的中央处理器(CPU)的本地 I/O 总线**，但通过使用一种称为**非透明桥(NTB)的特殊类型的设备，可以将 PCIe 总线从单个计算机延伸出来并连接多个系统**。 NTB 可以嵌入到 CPU 功能中[[77]，[95]]，但更常用的是在 PCIe 交换芯片[[13]，[82]]中实现，允许独立的计算机系统通过插入式主机适配器卡和外部电缆[[44]，[50]，[67]，[69]]进行互连。与其他互联技术不同，使用 PCIe 网络构建的解决方案可以访问资源，而不需要任何性能开销，因为不需要协议转换。但是，尽管过去提出了一些使用 NTB 的解耦方法[[31]，[89]]，但这些实现提供的解决方案中的设备都由专用服务器拥有。由于资源的分发通常只能针对直接连接到与此服务器相同的交换机的主机，因此这些方法会放弃完全分布式集群计算系统的灵活性。另一种**基于 PCIe 的解决方案依赖于 PCIe 交换芯片硬件中的附加虚拟化功能来划分 PCIe 结构，并为每个单独的主机创建虚拟设备树**[[15]，[51]]。这些解决方案允许设备直接连接到交换机，而不是服务器。但是，这些解决方案只能在设备级别解耦资源。要想在多个主机上共享相同的设备，要么需要设备本身提供虚拟化支持，即单根 I / O 虚拟化(SR-IOV)，要么需要额外的分发方法，如 RDMA。
 
 To address these challenges, we present our _SmartIO_ system for sharing resources and distributing devices in a heterogeneous, PCIe-interconnected cluster. Unlike existing solutions, our system is able to provide sharing and disaggregation capabilities at multiple abstraction levels: distributing devices to physical hosts, distributing devices to VMs, and enabling disaggregation of devices and memory in software. In addition, our SmartIO system is fully distributed. We avoid relying on dedicated servers and instead allow all hosts to contribute their own local resources and access remote resources, even at the same time. This blurs the distinction between remote and local resources, and scaling out and increasing the overall I/O resource utilization in the system becomes easier.
 
-> 为了解决这些挑战，我们提出了*SmartIO*系统，用于在异构 PCIe 互连集群中共享资源和分发设备。与现有解决方案不同，我们的系统能够在多个抽象层次上提供共享和分解功能：将设备分发到物理主机，将设备分发到虚拟机，以及在软件中实现设备和内存的分解。此外，我们的 SmartIO 系统是完全分布式的。我们避免依赖专用服务器，而是允许所有主机提供自己的本地资源并同时访问远程资源。这模糊了远程和本地资源之间的区别，使系统中 I/O 资源利用率的扩展和提高变得更加容易。
+> 为了解决这些挑战，我们**提出了 _SmartIO_ 系统，用于在异构 PCIe 互连集群中共享资源和分发设备**。与现有解决方案不同，我们的系统能够在多个抽象层次上提供共享和分解功能：将设备分发到物理主机，将设备分发到虚拟机，以及在软件中实现设备和内存的分解。此外，我们的 SmartIO 系统是**完全分布式**的。我们避免依赖专用服务器，而是允许所有主机提供自己的本地资源并同时访问远程资源。这**模糊了远程和本地资源之间的区别**，使系统中 I/O 资源利用率的扩展和提高变得更加容易。
 
 SmartIO is implemented on top of the inherent memory mapping capabilities of NTBs, allowing cluster nodes to map parts of the address space in remote hosts. Our system effectively makes all hosts, including their internal resources (both devices and memory), part of a common PCIe domain. Remote resources can be accessed directly over native PCIe, without requiring any software in the data path or network protocol translation. Furthermore, by relying on PCIe shared-memory techniques, SmartIO is able to abstract away the physical location of devices and memory resources. Our implementation translates memory addresses between different address domains and resolves paths through the PCIe network in a manner that is transparent to both application software and device drivers. As all nodes may contribute their resources, and not only dedicated servers, our SmartIO is able to provide optimizations based on resource locality and minimizing data movement, without requiring the user to be aware of the underlying PCIe topology. This unlocks a new potential in PCIe-connected cluster systems, as application software no longer needs to be written with accessing remote resources in mind, but can be implemented as if resources are local.
 
-> SmartIO 利用 NTB 的固有内存映射功能实现，允许集群节点映射远程主机的地址空间的部分。我们的系统有效地使所有主机(包括其内部资源(设备和内存))成为共同的 PCIe 域的一部分。可以直接通过本机 PCIe 访问远程资源，而无需在数据路径或网络协议转换中使用任何软件。此外，通过依赖 PCIe 共享内存技术，SmartIO 能够抽象出设备和内存资源的物理位置。我们的实现在不同的地址域之间转换内存地址，并以对应用软件和设备驱动程序透明的方式通过 PCIe 网络解析路径。由于所有节点都可以提供资源，而不仅仅是专用服务器，因此我们的 SmartIO 能够基于资源局部性和最小化数据移动提供优化，而无需用户了解底层 PCIe 拓扑结构。这为 PCIe 连接的集群系统开启了新的潜力，因为应用软件不再需要以访问远程资源为目的来编写，而可以像访问本地资源一样实现。
+> **SmartIO 利用 NTB 的固有内存映射功能实现，允许集群节点映射远程主机的地址空间的部分**。我们的系统有效地使所有主机(包括其内部资源(设备和内存))成为共同的 PCIe 域的一部分。可以直接通过本机 PCIe 访问远程资源，而无需在数据路径或网络协议转换中使用任何软件。此外，通过依赖 PCIe 共享内存技术，SmartIO 能够抽象出设备和内存资源的物理位置。我们的实现在不同的地址域之间转换内存地址，并以对应用软件和设备驱动程序透明的方式通过 PCIe 网络解析路径。由于所有节点都可以提供资源，而不仅仅是专用服务器，因此我们的 SmartIO 能够基于资源局部性和最小化数据移动提供优化，而无需用户了解底层 PCIe 拓扑结构。这为 PCIe 连接的集群系统开启了新的潜力，因为**应用软件不再需要以访问远程资源为目的来编写，而可以像访问本地资源一样实现**。
 
 We have previously demonstrated how Device Lending allows devices to be dynamically assigned to different machines, making it possible for a system to access remote PCIe devices as if they were locally installed [[41](#Bib0041)]. We have also shown how our Device Lending method extends to VMs by implementing a **mediated device interface (MDEV)**, which facilitates pass-through of remote PCIe devices to VMs running on any host in the cluster [[48](#Bib0048), [49](#Bib0049)]. Our new complete SmartIO sharing solution does not only incorporate this earlier work, but greatly extends and supersedes it. We have generalized the core components of our original Device Lending implementation, i.e., the mechanism that enables direct access over PCIe in a manner that is transparent to both device and device driver, and have developed an entirely new **application programming interface (API)**. This new API provides device driver functionality to shared-memory cluster applications, such as mapping shared memory regions for **direct memory access (DMA)** from the device and memory-mapping device registers into application address space. By making device operation part of distributed cluster applications and allowing devices to access shared memory regions using native DMA, it becomes possible to disaggregate devices in software. As such, our new API enables _simultaneous sharing_ of devices between software processes running on different hosts in the cluster, in addition to device-level distribution capabilities provided by Device Lending and MDEV.
 
@@ -76,73 +76,88 @@ In short, SmartIO is a flexible framework for device distribution and resource s
 
 - We have created a new device-oriented API for writing device drivers as shared-memory applications. This makes it possible to disaggregate devices in software, similarly to RDMA disaggregation solutions. Unlike RDMA, however, resources are accessed over native PCIe, which allows resources to be shared without introducing a performance penalty. Through our API, device driver implementations may take full advantage of PCIe shared memory capabilities, such as remote memory access and multicasting, without requiring awareness of the PCIe topology and the different address domains of remote systems. This makes it easier for application software to optimize data flow through the PCIe network.
 
-> 我们创建了一个新的面向设备的 API，用于编写设备驱动程序作为共享内存应用程序。这使得像 RDMA 分散解决方案一样，可以在软件中分散设备。不同于 RDMA，资源是通过原生 PCIe 访问的，这允许资源在不引入性能损失的情况下共享。通过我们的 API，设备驱动程序实现可以充分利用 PCIe 共享内存功能，如远程内存访问和多播，而无需了解 PCIe 拓扑和远程系统的不同地址域。这使应用程序软件更容易优化通过 PCIe 网络的数据流。
+> 我们**创建了一个新的面向设备的 API**，用于编写设备驱动程序作为共享内存应用程序。这使得像 RDMA 分散解决方案一样，可以在软件中分散设备。不同于 RDMA，资源是通过原生 PCIe 访问的，这允许资源在不引入性能损失的情况下共享。通过我们的 API，设备驱动程序实现可以充分利用 PCIe 共享内存功能，如远程内存访问和多播，而无需了解 PCIe 拓扑和远程系统的不同地址域。这使应用程序软件更容易优化通过 PCIe 网络的数据流。
 
 - We have developed a prototype NVMe device driver using our new device-oriented API. Although the Device Lending component of SmartIO makes it possible to use existing device drivers, most device drivers are written in a way that assumes exclusive control over the device. Using Device Lending alone, a device may only be used by a single host at the time. To demonstrate software-enabled disaggregation, we have implemented a _distributed_ NVMe driver. As a proof of concept, we show a single NVMe device can be shared and operated by 30 cluster nodes simultaneously, without requiring SR-IOV. This driver also demonstrates how multiple sharing aspects of our system may be combined, by disaggregating (remote) GPU memory and enabling memory access optimizations.
 
-> 我们使用我们的新型设备导向 API 开发了一个 NVMe 设备驱动程序的原型。尽管 SmartIO 的设备借用组件使得可以使用现有的设备驱动程序，但大多数设备驱动程序的编写方式假定对设备具有独占控制权。仅使用设备借用，一个设备只能被一个主机同时使用。为了演示软件实现的分散，我们实现了一个分布式 NVMe 驱动程序。作为一个概念验证，我们展示了一个单一的 NVMe 设备可以被 30 个集群节点同时共享和操作，而无需 SR-IOV。该驱动程序还演示了如何结合我们系统的多个共享方面，通过分散(远程)GPU 内存并实现内存访问优化。
+> 我们使用我们的新型设备导向 API 开发了一个 NVMe 设备驱动程序的原型。尽管 SmartIO 的设备借用组件使得可以使用现有的设备驱动程序，但大多数设备驱动程序的编写方式假定对设备具有独占控制权。仅使用设备借用，一个设备只能被一个主机同时使用。为了演示软件实现的分散，我们实现了一个分布式 NVMe 驱动程序。作为一个概念验证，我们**展示了一个单一的 NVMe 设备可以被 30 个集群节点同时共享和操作，而无需 SR-IOV**。该驱动程序还演示了如何结合我们系统的多个共享方面，通过分散(远程)GPU 内存并实现内存访问优化。
 
 - To prove that our solution enables zero-overhead sharing, we provide a comprehensive performance evaluation covering all components of our SmartIO solution, including our earlier Device Lending and MDEV work. We have performed entirely new experiments, using both synthetic microbenchmarks and realistic large-scale workloads. Our experimental results confirm that I/O devices can be distributed to, and shared with, remote hosts, without any performance penalty beyond what is expected for longer PCIe paths. In fact, all our experiments prove that remote devices can be used _without any performance overhead_ compared to local access in terms of latency and throughput.
 
-> 为了证明我们的解决方案可以实现零开销共享，我们提供了一个全面的性能评估，涵盖了我们 SmartIO 解决方案的所有组件，包括我们之前的设备借用和 MDEV 工作。我们完全进行了新的实验，使用合成微基准和真实的大规模工作负载。我们的实验结果证实，I / O 设备可以分发到远程主机并与其共享，而不会产生任何性能损失，除了预期的更长的 PCIe 路径。事实上，我们所有的实验都证明，与本地访问相比，远程设备可以在延迟和吞吐量方面*没有任何性能损失*。
+> 为了证明我们的解决方案可以实现零开销共享，我们提供了一个全面的性能评估，涵盖了我们 SmartIO 解决方案的所有组件，包括我们之前的设备借用和 MDEV 工作。我们完全进行了新的实验，使用合成微基准和真实的大规模工作负载。我们的实验结果证实，I / O 设备可以分发到远程主机并与其共享，而不会产生任何性能损失，除了预期的更长的 PCIe 路径。事实上，我们**所有的实验都证明，与本地访问相比，远程设备可以在延迟和吞吐量方面 _没有任何性能损失_**。
 
 The rest of this article is structured as follows: Section [2](#sec-7) gives a high-level overview of our SmartIO system. Section [3](#sec-10) explains the basic building blocks of shared-memory networking with PCIe. In Section [4](#sec-14), we detail our Device Lending method, and in Section [5](#sec-19), we explain how the original Device Lending was enhanced with hypervisor support (MDEV). In Section [6](#sec-25), we describe our new software API and use a distributed NVMe driver implementation as an example implementation. We present our experimental results and extensive evaluation in Section [7](#sec-31), before we provide a discussion of other aspects and considerations of our SmartIO solution in Section [8](#sec-47). Finally, we put the work in the context of state of the art in Section [9](#sec-55), and conclude the article in Section [10](#sec-61).
 
-> 本文的其余部分结构如下：第 2 节(#sec-7)简要介绍了我们的 SmartIO 系统；第 3 节(#sec-10)解释了 PCIe 共享内存网络的基本构建模块；第 4 节(#sec-14)详细介绍了我们的设备借用方法，第 5 节(#sec-19)解释了如何通过虚拟机支持(MDEV)来增强原有的设备借用方法；第 6 节(#sec-25)描述了我们的新软件 API，并以分布式 NVMe 驱动程序实现为例；第 7 节(#sec-31)展示了我们的实验结果和广泛的评估；第 8 节(#sec-47)讨论了我们的 SmartIO 解决方案的其他方面和考虑因素；最后，第 9 节(#sec-55)将本文的工作置于最新技术的背景之下，第 10 节(#sec-61)对本文做出结论。
+> 本文的其余部分结构如下：
+>
+> - 第 2 节(#sec-7)简要介绍了我们的 SmartIO 系统；
+> - 第 3 节(#sec-10)解释了 PCIe 共享内存网络的基本构建模块；
+> - 第 4 节(#sec-14)详细介绍了我们的设备借用方法，
+> - 第 5 节(#sec-19)解释了如何通过虚拟机支持(MDEV)来增强原有的设备借用方法；
+> - 第 6 节(#sec-25)描述了我们的新软件 API，并以分布式 NVMe 驱动程序实现为例；
+> - 第 7 节(#sec-31)展示了我们的实验结果和广泛的评估；
+> - 第 8 节(#sec-47)讨论了我们的 SmartIO 解决方案的其他方面和考虑因素；最后，
+> - 第 9 节(#sec-55)将本文的工作置于最新技术的背景之下，
+> - 第 10 节(#sec-61)对本文做出结论。
 
 ## 2 SYSTEM OVERVIEW
 
 Our SmartIO solution allows the local resources of a host, i.e., memory and devices, to be accessed directly by remote hosts, over standard PCIe. SmartIO works for _all_ standard PCIe devices. Individual device functions of multi-function devices may be distributed to different hosts in the network, or to the same host should it require multiple resources. It is even possible to disaggregate a single device (function) in software, and distribute it to multiple hosts.
 
-> 我们的 SmartIO 解决方案允许远程主机直接访问主机的本地资源，即内存和设备，通过标准 PCIe。SmartIO 适用于*所有*标准 PCIe 设备。多功能设备的各个设备功能可以分发到网络中的不同主机，或者如果需要多个资源，可以分发到同一个主机。甚至可以在软件中分解单个设备(功能)，并将其分发到多个主机。
+> 我们的 **SmartIO 解决方案允许远程主机直接访问主机的本地资源，即内存和设备，通过标准 PCIe**。SmartIO 适用于 _所有_ 标准 PCIe 设备。多功能设备的各个设备功能可以分发到网络中的不同主机，或者如果需要多个资源，可以分发到同一个主机。甚至可以在软件中分解单个设备(功能)，并将其分发到多个主机。
 
 As depicted in Figure [1](#fig1), we can imagine this as hosts contributing their internal resources to a pool of shared resources. Through a process of borrowing devices and releasing them when they are no longer needed, it is possible to support a dynamic and composable I/O infrastructure consisting of a combination of local and remote resources. Whether devices are actually local or remote becomes irrelevant to the user, as SmartIO eliminates this distinction, both function and performance wise. In other words, SmartIO is a solution for scaling out and using more hardware resources than there are available in a single host.
 
 > 如图 1 所示，我们可以想象主机将其内部资源投入到一个共享资源池中。通过借用设备并在不再需要时释放它们的过程，可以支持由本地和远程资源组成的动态可组合的 I / O 基础架构。实际上，设备是本地的还是远程的对用户来说就不重要了，因为 SmartIO 在功能和性能方面消除了这种区别。换句话说，SmartIO 是一种扩展和使用比单个主机更多硬件资源的解决方案。
 
-![](https://dl.acm.org/cms/attachment/066a4e2f-1f8c-412c-8337-bb9b17be1b14/tocs380102-02-f01.jpg) Fig. 1. SmartIO allows the internal devices of hosts in the network to be shared with other hosts connected to the same fabric. Nodes in a PCIe-networked cluster can contribute their internal devices to a shared device pool, and borrow resources from that pool when needed.
+> ![](https://dl.acm.org/cms/attachment/066a4e2f-1f8c-412c-8337-bb9b17be1b14/tocs380102-02-f01.jpg)
+> Fig. 1. SmartIO allows the internal devices of hosts in the network to be shared with other hosts connected to the same fabric. Nodes in a PCIe-networked cluster can contribute their internal devices to a shared device pool, and borrow resources from that pool when needed.
 
 ### 2.1 Motivation and Challenges
 
 Due to its very low latency overhead and memory addressing properties, using PCIe as a high-speed interconnection technology is a compelling alternative to traditional networking technologies [[44](#Bib0044), [50](#Bib0050), [67](#Bib0067)]. However, because PCIe was originally designed as a local I/O bus, connecting devices to the CPU on a motherboard, individual computer systems operate with different PCIe address domains. Interconnecting systems using PCIe require translating memory transactions from one address domain to another. The most common method of translating addresses is to use NTBs [[69](#Bib0069), [82](#Bib0082), [87](#Bib0087)]. Figure [2](#fig2) illustrates how several computer systems may be interconnected in a cluster, by implementing adapter cards and cluster switches with NTBs. The inherent memory address translation capabilities of NTBs make it possible to map (parts of) the address space of remote systems. More interesting, however, is the fact that in such PCIe networks, both CPUs and internal PCIe devices are attached to the same, shared PCIe fabric.
 
-> 由于其非常低的延迟开销和内存地址映射属性，使用 PCIe 作为高速互连技术是传统网络技术的一个有力替代选择[[44](#Bib0044)，[50](#Bib0050)，[67](#Bib0067)]。然而，由于 PCIe 最初是设计为本地 I / O 总线，将设备连接到主板上的 CPU，因此各个计算机系统具有不同的 PCIe 地址域。使用 PCIe 连接系统需要将内存事务从一个地址域转换到另一个地址域。最常用的地址转换方法是使用 NTB [[69](#Bib0069)，[82](#Bib0082)，[87](#Bib0087)]。图[2](#fig2)描述了如何通过实现具有 NTB 的适配器卡和集群交换机来将几个计算机系统连接到集群中。NTB 的固有内存地址转换功能使得可以映射(远程系统的部分)地址空间。更有趣的是，在这种 PCIe 网络中，CPU 和内部 PCIe 设备都连接到同一个共享的 PCIe 结构。
+> 由于**其非常低的延迟开销和内存地址映射属性，使用 PCIe 作为高速互连技术是传统网络技术的一个有力替代选择**[[44](#Bib0044)，[50](#Bib0050)，[67](#Bib0067)]。然而，由于 PCIe 最初是设计为本地 I / O 总线，将设备连接到主板上的 CPU，因此各个计算机系统具有不同的 PCIe 地址域。**使用 PCIe 连接系统需要将内存事务从一个地址域转换到另一个地址域。最常用的地址转换方法是使用 NTB** [[69](#Bib0069)，[82](#Bib0082)，[87](#Bib0087)]。图[2](#fig2)描述了如何通过实现具有 NTB 的适配器卡和集群交换机来将几个计算机系统连接到集群中。**NTB 的固有内存地址转换功能使得可以映射(远程系统的部分)地址空间**。更有趣的是，在这种 PCIe 网络中，CPU 和内部 PCIe 设备都连接到同一个共享的 PCIe 结构。
 
-![](https://dl.acm.org/cms/attachment/d013889d-7324-41e5-9e60-db3970d3225d/tocs380102-02-f02.jpg) Fig. 2. We can create a heterogeneous PCIe cluster by interconnecting nodes (hosts) with external PCIe links using adapter cards capable of non-transparent bridging (NTB). In such clusters, the CPUs as well as the internal devices of each node are all attached to the same PCIe network fabric.
+> ![](https://dl.acm.org/cms/attachment/d013889d-7324-41e5-9e60-db3970d3225d/tocs380102-02-f02.jpg) 
+> Fig. 2. We can create a heterogeneous PCIe cluster by interconnecting nodes (hosts) with external PCIe links using adapter cards capable of non-transparent bridging (NTB). In such clusters, the CPUs as well as the internal devices of each node are all attached to the same PCIe network fabric.
 
 Remote resources, such as memory and I/O devices, can be mapped into a local system and accessed through the NTB. Similarly, a remote device capable of DMA may also use the NTB to access local resources. This eliminates the need to use memory on the remote node as an intermediate step when transferring data. As illustrated in Figure [3](#fig3), software overhead can be avoided, since all memory address translations can be done in NTB hardware.
 
-> 远程资源，如内存和 I / O 设备，可以映射到本地系统，并通过 NTB 访问。类似地，具有 DMA 功能的远程设备也可以使用 NTB 访问本地资源。这消除了在传输数据时使用远程节点上的内存作为中间步骤的需要。如图 3 所示，可以避免软件开销，因为所有的内存地址转换都可以在 NTB 硬件中完成。
+> **远程资源，如内存和 I / O 设备，可以映射到本地系统，并通过 NTB 访问**。类似地，具有 DMA 功能的远程设备也可以使用 NTB 访问本地资源。这消除了在传输数据时使用远程节点上的内存作为中间步骤的需要。如图 3 所示，可以**避免软件开销，因为所有的内存地址转换都可以在 NTB 硬件中完成**。
 
-![](https://dl.acm.org/cms/attachment/33ef8be9-e1ef-4724-ab85-396600735560/tocs380102-02-f03.jpg) Fig. 3. Many disaggregation solutions have performance overheads, because they rely on middleware or other forms of software facilitation on the remote system. Using SmartIO, remote hardware can be accessed directly without any software in the critical path by setting up memory mappings over the NTB.
+
+![](https://dl.acm.org/cms/attachment/33ef8be9-e1ef-4724-ab85-396600735560/tocs380102-02-f03.jpg) 
+Fig. 3. Many disaggregation solutions have performance overheads, because they rely on middleware or other forms of software facilitation on the remote system. Using SmartIO, remote hardware can be accessed directly without any software in the critical path by setting up memory mappings over the NTB.
 
 However, setting up such NTB mappings requires awareness of the address space on the remote system. When initiating DMA transfers, a device driver must use addresses that corresponds with the remote device's address space to enable a DMA-capable device to read or write across the NTB. This greatly increases the programming complexity of device drivers. Therefore, our SmartIO system provides a mechanism for using NTBs while remaining agnostic about the address space in remote systems. The physical location of a resource, as well as the address space layout in the host it is installed in, is entirely abstracted away.
 
-> 然而，设置这种 NTB 映射需要了解远程系统的地址空间。在发起 DMA 传输时，设备驱动程序必须使用与远程设备地址空间对应的地址，以使 DMA 可能的设备可以跨 NTB 读写。这大大增加了设备驱动程序的编程复杂性。因此，我们的 SmartIO 系统提供了一种使用 NTB 的机制，同时保持对远程系统地址空间的不可知性。资源的物理位置以及它安装在主机中的地址空间布局完全被抽象化了。
+> 然而，**设置这种 NTB 映射需要了解远程系统的地址空间**。在发起 DMA 传输时，设备驱动程序必须使用与远程设备地址空间对应的地址，以使 DMA 可能的设备可以跨 NTB 读写。这大大增加了设备驱动程序的编程复杂性。因此，我们的 SmartIO 系统提供了一种使用 NTB 的机制，同时保持对远程系统地址空间的不可知性。资源的物理位置以及它安装在主机中的地址空间布局完全被抽象化了。
 
 Nevertheless, this abstraction gives rise to another challenge; a device driver that is unaware that a device is remote may assume that the entire local address space can be reached by the device. It is generally not possible to predict in advance which memory addresses a device driver may use, yet NTB mappings must be in place before the device driver initiates DMA transfers. Deferring mappings until the device driver initiates DMA would require synchronizing with the remote system in the critical path, thus increasing the overall latency. A naive workaround is mapping the entire memory for the device, but this solution does not scale for multiple hosts. SmartIO solves this, and is able to prepare necessary memory-mappings in advance, without introducing any communication overhead in the critical path.
 
-> 尽管如此，这种抽象也带来了另一个挑战：一个不知道设备是远程的设备驱动程序可能会假定整个本地地址空间都可以被设备访问。通常无法预先预测设备驱动程序可能使用哪些内存地址，但是在设备驱动程序启动 DMA 传输之前，必须先建立 NTB 映射。将映射推迟到设备驱动程序启动 DMA 时，就需要在关键路径上与远程系统同步，从而增加整体延迟。一个简单的解决方案是为设备映射整个内存，但是这种解决方案不能用于多个主机。SmartIO 解决了这个问题，可以提前准备必要的内存映射，而不会在关键路径上引入任何通信开销。
+> 尽管如此，这种抽象也带来了另一个挑战：一个不知道设备是远程的设备驱动程序可能会假定整个本地地址空间都可以被设备访问。通常无法预先预测设备驱动程序可能使用哪些内存地址，但是**在设备驱动程序启动 DMA 传输之前，必须先建立 NTB 映射**。将映射推迟到设备驱动程序启动 DMA 时，就需要在关键路径上与远程系统同步，从而增加整体延迟。一个简单的解决方案是为设备映射整个内存，但是这种解决方案不能用于多个主机。SmartIO 解决了这个问题，可以**提前准备必要的内存映射，而不会在关键路径上引入任何通信开销**。
 
 ### 2.2 Overall Design
 
 Our system is composed of _“borrowers”_ and _“lenders.”_ A lender is a computer system that registers one or more of its internal PCIe devices with SmartIO, allowing the devices to be distributed to and used by remote hosts. A borrower is a system that is currently using such a device. While a device only has one lender, namely, the computer system where it is physically installed, there can be several borrowers using it simultaneously.[1](#fn1) SmartIO also makes it possible for a system to act as both lender and borrower at the same time, lending out its own local devices and simultaneously borrowing remote devices from other hosts.
 
-> 我们的系统由“借用者”和“出借者”组成。出借者是一个计算机系统，它将其一个或多个内部 PCIe 设备注册到 SmartIO，允许这些设备被分发到远程主机并被使用。借用者是当前正在使用这样一个设备的系统。虽然一个设备只有一个出借者，即它物理安装的计算机系统，但可以有几个借用者同时使用它。[1](＃fn1)SmartIO 还使得一个系统同时充当出借者和借用者，出借自己的本地设备，同时从其他主机借用远程设备。
+> 我们的**系统由“借用者”和“出借者”组成**。出借者是一个计算机系统，它**将其一个或多个内部 PCIe 设备注册到 SmartIO，允许这些设备被分发到远程主机并被使用**。借用者是当前正在使用这样一个设备的系统。虽然一个设备只有一个出借者，即它物理安装的计算机系统，但可以有几个借用者同时使用它。[1](＃fn1)SmartIO 还使得一个系统同时充当出借者和借用者，出借自己的本地设备，同时从其他主机借用远程设备。
 
 Building PCIe networking into our system is a crucial part of our design, as it enables access to remote resources with very low latency and extremely low computing overheads. The hard separation between local and remote is blurred, with regard to both functionality and performance. Furthermore, this design means that the implementation complexity of SmartIO lies in software. SmartIO can be implemented for existing computer systems that are connected with NTBs, using either on-board PCIe switch chips or plug-in adapter cards, in any network topology.
 
-> 在我们的系统中建立 PCIe 网络是设计的关键部分，因为它可以以非常低的延迟和极低的计算开销访问远程资源。本地和远程之间的硬分离在功能和性能方面变得模糊。此外，这种设计意味着 SmartIO 的实现复杂度位于软件中。SmartIO 可以用 NTB 连接的现有计算机系统实现，使用板载 PCIe 交换芯片或插入式适配器卡，在任何网络拓扑中实现。
+> 在我们的系统中建立 PCIe 网络是设计的关键部分，因为它可以**以非常低的延迟和极低的计算开销访问远程资源**。本地和远程之间的硬分离在功能和性能方面变得模糊。此外，这种设计意味着 SmartIO 的实现复杂度位于软件中。SmartIO 可以用 NTB 连接的现有计算机系统实现，使用板载 PCIe 交换芯片或插入式适配器卡，在任何网络拓扑中实现。
 
 Figure [4](#fig4) illustrates the different components of our system and how they fit together:
 
 > 图 4(#fig4)描绘了我们系统的不同组件以及它们如何结合在一起：
 
-![](https://dl.acm.org/cms/attachment/7c350e06-fe90-4961-9b64-b39659402814/tocs380102-02-f04.jpg) Fig. 4. SmartIO provides different interfaces that facilitate access to a remote resource. These interfaces present an abstraction layer to application software and device drivers, providing a logical decoupling of devices and which physical hosts they are installed in.
+> ![](https://dl.acm.org/cms/attachment/7c350e06-fe90-4961-9b64-b39659402814/tocs380102-02-f04.jpg) 
+> Fig. 4. SmartIO provides different interfaces that facilitate access to a remote resource. These interfaces present an abstraction layer to application software and device drivers, providing a logical decoupling of devices and which physical hosts they are installed in.
 
 1.  **Low-level NTB driver:** Our SmartIO solution is built on top of NTB interconnection technology. The low-level NTB driver makes it possible to connect hosts over a PCIe network fabric and set up memory-mappings on demand. Moreover, the NTB driver also enables individual systems to contribute parts (or “segments”) of their local memory to a cluster-wide, distributed shared-memory space. Cluster applications may use the **Software Infrastructure Shared-Memory Cluster Interconnect API (SISCI)** [[22](#Bib0022)] to manage local and remote segments of memory and map them into the application's local address space.
 
-> 我们的 SmartIO 解决方案建立在 NTB 连接技术之上。低级 NTB 驱动程序可以通过 PCIe 网络结构连接主机，并根据需要设置内存映射。此外，NTB 驱动程序还可以使各个系统将其本地内存的部分(或“段”)贡献给集群范围的分布式共享内存空间。集群应用程序可以使用**软件基础设施共享内存集群互连 API(SISCI)**[[22](＃Bib0022)]来管理本地和远程内存段，并将它们映射到应用程序的本地地址空间中。
+> 我们的 **SmartIO 解决方案建立在 NTB 连接技术之上**。低级 NTB 驱动程序可以通过 PCIe 网络结构连接主机，并根据需要设置内存映射。此外，NTB 驱动程序还可以使各个系统将其本地内存的部分(或“段”)贡献给集群范围的分布式共享内存空间。集群应用程序可以使用**软件基础设施共享内存集群互连 API(SISCI)**[[22](＃Bib0022)]来管理本地和远程内存段，并将它们映射到应用程序的本地地址空间中。
 
 2.  **Resource abstraction mechanism:** SmartIO provides functionality for transparently translating I/O addresses between different address domains, resolving paths in the cluster, and dynamically setting up necessary NTB mappings for the borrowing system and the device. This makes it possible to abstract away the location of the device, i.e., which host machine it is installed in, in a manner that is transparent to both the device and the software process using the device. With this abstraction, SmartIO can facilitate the use of remote resources (both memory and devices) without requiring software to be aware of the underlying, physical PCIe topology or the internal I/O address space layout of remote hosts. SmartIO also supports setting up mappings between multiple devices, even when they reside in different lenders, allowing PCIe transactions between them to be routed along the shortest path in the PCIe network (peer-to-peer).
 
@@ -1436,7 +1451,7 @@ The authors thank the Dolphin Interconnect Solutions developers team, particular
 
 - Liqid Corporation. [n.d.]. Liqid Composable Infrastructure. Retrieved from [https://www.liqid.com/](https://www.liqid.com/). Navigate tocitation 1
 
-> - Liqid Corporation(无日期)。Liqid 可组合基础架构。从[https://www.liqid.com/](https://www.liqid.com/)获取。转到引用1
+> - Liqid Corporation(无日期)。Liqid 可组合基础架构。从[https://www.liqid.com/](https://www.liqid.com/)获取。转到引用 1
 
 - Alexandros Daglis, Stanko Novaković, Edouard Bugnion, Babak Falsafi, and Boris Grot. 2015. Manycore network interfaces for in-memory rack-scale computing. _ACM SIGARCH Comput. Architect. News_ 43, 3 (2015), 567–579. DOI: [https://doi.org/10.1145/2872887.2750415](https://doi.org/10.1145/2872887.2750415) Navigate tocitation 1
 
@@ -1512,11 +1527,11 @@ The authors thank the Dolphin Interconnect Solutions developers team, particular
 
 - Linux kernel development community. 2013. VFIO—“Virtual Function I/O.” Retrieved from [https://www.kernel.org/doc/Documentation/vfio.txt](https://www.kernel.org/doc/Documentation/vfio.txt). Navigate tocitation 1
 
-> 社区开发的 Linux 内核。2013 年。VFIO——“虚拟功能 I/O”。从[https://www.kernel.org/doc/Documentation/vfio.txt](https://www.kernel.org/doc/Documentation/vfio.txt)获取。转到引用1
+> 社区开发的 Linux 内核。2013 年。VFIO——“虚拟功能 I/O”。从[https://www.kernel.org/doc/Documentation/vfio.txt](https://www.kernel.org/doc/Documentation/vfio.txt)获取。转到引用 1
 
 - Linux kernel development community. 2019. Linux IOMMU Support. Retrieved from [https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt](https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt). Navigate tocitation 1
 
-> 社区开发的 Linux 内核。2019 年。Linux IOMMU 支持。从[https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt](https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt)获取。导航到引文1
+> 社区开发的 Linux 内核。2019 年。Linux IOMMU 支持。从[https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt](https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt)获取。导航到引文 1
 
 - Hyeong-Jun Kim, Young-Sik Lee, and Jin-Soo Kim. 2016. NVMeDirect: A user-space I/O framework for application-specific optimization on NVMe SSDs. In _Proceedings of the USENIX Workshop on Hot Topics in Storage and File Systems (HotStorage’16)_. 41–45. Navigate tocitation 1
 
@@ -1524,7 +1539,7 @@ The authors thank the Dolphin Interconnect Solutions developers team, particular
 
 - KaiGai Kohei. 2016. GpuScan + SSD-to-GPUDirect DMA. Retrieved from [https://kaigai.hatenablog.com/entry/2016/09/08/003556](https://kaigai.hatenablog.com/entry/2016/09/08/003556). Navigate tocitation 1
 
-> KaiGai Kohei. 2016. GPUScan + SSD-to-GPUDirect DMA。从[https://kaigai.hatenablog.com/entry/2016/09/08/003556](https://kaigai.hatenablog.com/entry/2016/09/08/003556)获取。转到引用1。
+> KaiGai Kohei. 2016. GPUScan + SSD-to-GPUDirect DMA。从[https://kaigai.hatenablog.com/entry/2016/09/08/003556](https://kaigai.hatenablog.com/entry/2016/09/08/003556)获取。转到引用 1。
 
 - Lars Bjørlykke Kristiansen, Jonas Markussen, Håkon Kvale Stensland, Michael Riegler, Hugo Kohmann, Friedrich Seifert, Roy Nordstrøm, Carsten Griwodz, and Pål Halvorsen. 2016. Device lending in PCI express networks. In _Proceedings of the International Workshop on Network and Operating Systems Support for Digital Audio and Video (NOSSDAV’16)_. 10:1–10:6. DOI: [https://doi.org/10.1145/2910642.2910650](https://doi.org/10.1145/2910642.2910650) Navigate tocitation 1citation 2citation 3
 
@@ -1566,11 +1581,11 @@ Seung-Ho Lim、Ki-Woong Park 和 Kwang-Ho Cha。2019 年。在无开关 PCIe 非
 
 - Vijay Meduri. 2011. A Case for PCI Express as a High-Performance Cluster Interconnect. Retrieved from [https://www.hpcwire.com/2011/01/24/a_case_for_pci_express_as_a_high-performance_cluster_interconnect/](https://www.hpcwire.com/2011/01/24/a_case_for_pci_express_as_a_high-performance_cluster_interconnect/). Navigate tocitation 1citation 2citation 3
 
-> Vijay Meduri，2011 年。支持 PCI Express 作为高性能集群互连的案例。从[https://www.hpcwire.com/2011/01/24/a_case_for_pci_express_as_a_high-performance_cluster_interconnect/](https://www.hpcwire.com/2011/01/24/a_case_for_pci_express_as_a_high-performance_cluster_interconnect/)检索。转到引文1引文2引文3
+> Vijay Meduri，2011 年。支持 PCI Express 作为高性能集群互连的案例。从[https://www.hpcwire.com/2011/01/24/a_case_for_pci_express_as_a_high-performance_cluster_interconnect/](https://www.hpcwire.com/2011/01/24/a_case_for_pci_express_as_a_high-performance_cluster_interconnect/)检索。转到引文 1 引文 2 引文 3
 
 - Microsemi. 2019. _Multi-Host Sharing of NVMe Drives and GPUs Using PCIe Fabrics_. Technical Report . Microsemi. Retrieved from [http://www.symmttm.com/document-portal/doc_download/1244483-multi-host-sharing-of-nvme-drives-and-gpus-using-pcie](http://www.symmttm.com/document-portal/doc_download/1244483-multi-host-sharing-of-nvme-drives-and-gpus-using-pcie). Navigate tocitation 1citation 2
 
-> Microsemi. 2019. 使用 PCIe 网络共享 NVMe 驱动器和 GPU。技术报告。Microsemi。从[http://www.symmttm.com/document-portal/doc_download/1244483-multi-host-sharing-of-nvme-drives-and-gpus-using-pcie](http://www.symmttm.com/document-portal/doc_download/1244483-multi-host-sharing-of-nvme-drives-and-gpus-using-pcie)检索。转到引文1引文2
+> Microsemi. 2019. 使用 PCIe 网络共享 NVMe 驱动器和 GPU。技术报告。Microsemi。从[http://www.symmttm.com/document-portal/doc_download/1244483-multi-host-sharing-of-nvme-drives-and-gpus-using-pcie](http://www.symmttm.com/document-portal/doc_download/1244483-multi-host-sharing-of-nvme-drives-and-gpus-using-pcie)检索。转到引文 1 引文 2
 
 - Ben-Yehuda Muli, Jon Mason, Orran Krieger, Jimi Xenidis, Leendert Van Doorn, Asit Mallick, Jun Nakijima, and Elsie Wahlig. 2006. Utilizing IOMMUs for virtualization in Linux and Xen. In _Proceedings of the Linux Symposium_. 71–85. Navigate tocitation 1
 
@@ -1602,19 +1617,19 @@ Seung-Ho Lim、Ki-Woong Park 和 Kwang-Ho Cha。2019 年。在无开关 PCIe 非
 
 - Peripheral Component Interconnect Special Interest Group (PCI-SIG) 2008. _Multi-root I/O Virtualization and Sharing Specification_. Peripheral Component Interconnect Special Interest Group (PCI-SIG). Retrieved from [https://www.pcisig.com/specifications/iov/multi-root/](https://www.pcisig.com/specifications/iov/multi-root/). Navigate tocitation 1
 
-> 中文：外围设备互连特别兴趣小组(PCI-SIG)2008 年。《多根 I / O 虚拟化和共享规范》。外围设备互连特别兴趣小组(PCI-SIG)。从[https://www.pcisig.com/specifications/iov/multi-root/](https://www.pcisig.com/specifications/iov/multi-root/)检索。转到引文1
+> 中文：外围设备互连特别兴趣小组(PCI-SIG)2008 年。《多根 I / O 虚拟化和共享规范》。外围设备互连特别兴趣小组(PCI-SIG)。从[https://www.pcisig.com/specifications/iov/multi-root/](https://www.pcisig.com/specifications/iov/multi-root/)检索。转到引文 1
 
 - Peripheral Component Interconnect Special Interest Group (PCI-SIG) 2009. _Address Translation Services Revision 1.1_. Peripheral Component Interconnect Special Interest Group (PCI-SIG). Retrieved from [https://www.pcisig.com/specifications/iov/ats/](https://www.pcisig.com/specifications/iov/ats/). Navigate tocitation 1citation 2
 
-> PCI-SIG(外围设备组件互连特别兴趣小组)2009 年。《地址转换服务修订 1.1》。PCI-SIG(外围设备组件互连特别兴趣小组)。从[https://www.pcisig.com/specifications/iov/ats/](https://www.pcisig.com/specifications/iov/ats/)获取。导航参考文献1参考文献2。
+> PCI-SIG(外围设备组件互连特别兴趣小组)2009 年。《地址转换服务修订 1.1》。PCI-SIG(外围设备组件互连特别兴趣小组)。从[https://www.pcisig.com/specifications/iov/ats/](https://www.pcisig.com/specifications/iov/ats/)获取。导航参考文献 1 参考文献 2。
 
 - Peripheral Component Interconnect Special Interest Group (PCI-SIG) 2010. _PCI Express 3.1 Base Specification_. Peripheral Component Interconnect Special Interest Group (PCI-SIG). Retrieved from [https://pcisig.com/specifications](https://pcisig.com/specifications). Navigate tocitation 1citation 2citation 3
 
-> PCI-SIG(外围设备接口特殊兴趣小组)2010 年。_PCI Express 3.1 基本规范_。PCI-SIG(外围设备接口特殊兴趣小组)。从[https://pcisig.com/specifications](https://pcisig.com/specifications)检索。导航引文1引文2引文3。
+> PCI-SIG(外围设备接口特殊兴趣小组)2010 年。_PCI Express 3.1 基本规范_。PCI-SIG(外围设备接口特殊兴趣小组)。从[https://pcisig.com/specifications](https://pcisig.com/specifications)检索。导航引文 1 引文 2 引文 3。
 
 - Peripheral Component Interconnect Special Interest Group (PCI-SIG) 2010. _Single-root I/O Virtualization and Sharing Specification_. Peripheral Component Interconnect Special Interest Group (PCI-SIG). Retrieved from [https://www.pcisig.com/specifications/iov/single-root/](https://www.pcisig.com/specifications/iov/single-root/). Navigate tocitation 1citation 2
 
-> 中文：外围设备互连特别兴趣小组(PCI-SIG)2010 年。_单根 I / O 虚拟化和共享规范_。外围设备互连特别兴趣小组(PCI-SIG)。从[https://www.pcisig.com/specifications/iov/single-root/](https://www.pcisig.com/specifications/iov/single-root/)检索。导航tocitation 1citation 2
+> 中文：外围设备互连特别兴趣小组(PCI-SIG)2010 年。_单根 I / O 虚拟化和共享规范_。外围设备互连特别兴趣小组(PCI-SIG)。从[https://www.pcisig.com/specifications/iov/single-root/](https://www.pcisig.com/specifications/iov/single-root/)检索。导航 tocitation 1citation 2
 
 - Konstantin Pogorelov, Olga Ostroukhova, Mattis Jeppsson, Håvard Espeland, Carsten Griwodz, Thomas de Lange, Dag Johansen, Michael Riegler, and Pål Halvorsen. 2018. Deep learning and hand-crafted feature based approaches for polyp detection in medical videos. In _Proceedings of the International Symposium on Computer-Based Medical Systems (CBMS’18)_. 381–386. DOI: [https://doi.org/10.1109/CBMS.2018.00073](https://doi.org/10.1109/CBMS.2018.00073) Navigate tocitation 1
 
@@ -1658,7 +1673,7 @@ Seung-Ho Lim、Ki-Woong Park 和 Kwang-Ho Cha。2019 年。在无开关 PCIe 非
 
 - Nikolay Sakharnykh. 2016. Beyond GPU Memory Limits with Unified Memory on Pascal. Retrieved from [https://developer.nvidia.com/blog/beyond-gpu-memory-limits-unified-memory-pascal/](https://developer.nvidia.com/blog/beyond-gpu-memory-limits-unified-memory-pascal/). Navigate tocitation 1
 
-> 纳米德尔·萨哈尔尼克(Nikolay Sakharnykh)。2016 年。超越 Pascal GPU 内存限制的统一内存。从[https://developer.nvidia.com/blog/beyond-gpu-memory-limits-unified-memory-pascal/](https://developer.nvidia.com/blog/beyond-gpu-memory-limits-unified-memory-pascal/)获取。转到引文1。
+> 纳米德尔·萨哈尔尼克(Nikolay Sakharnykh)。2016 年。超越 Pascal GPU 内存限制的统一内存。从[https://developer.nvidia.com/blog/beyond-gpu-memory-limits-unified-memory-pascal/](https://developer.nvidia.com/blog/beyond-gpu-memory-limits-unified-memory-pascal/)获取。转到引文 1。
 
 - Yizhou Shan, Yutong Huang, Yilun Chen, and Yiying Zhang. 2018. LegoOS: A disseminated, distributed OS for hardware resource disaggregation. In _Proceedings of the Conference on Operating Systems Design and Implementation (OSDI’18)_. 69–87. Navigate tocitation 1
 
