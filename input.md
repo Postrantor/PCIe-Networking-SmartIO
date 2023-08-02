@@ -1,7 +1,7 @@
 ---
 tip: translate by openai@2023-08-02 15:22:24
 url: https://dl.acm.org/doi/fullHtml/10.1145/3462545
-...
+---
 
 # SmartIO: Zero-overhead Device Sharing through PCIe Networking SmartIO: Zero-overhead Device Sharing through PCIe Networking(SmartIO：通过 PCIe 网络实现零开销的设备共享)
 
